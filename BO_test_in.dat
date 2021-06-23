@@ -1,0 +1,16 @@
+# Coefficient of internal firction
+# Cohesive stergnth (MPa)
+# Poisson ratio
+# Vetical stress (MPa)
+# Major horizontal principal stress (MPa)
+# Minor horizontal principal stress (MPa)
+# Pore pressure (MPa)
+# Mud weight (MPa)
+0.60
+10.0
+0.2
+50.0
+60.0
+30.0
+19.0
+19.0

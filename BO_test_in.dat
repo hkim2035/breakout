@@ -1,6 +1,7 @@
 # Coefficient of internal firction
 # Cohesive stergnth (MPa)
 # Poisson ratio
+# Wellbore radius (m)
 # Vetical stress (MPa)
 # Major horizontal principal stress (MPa)
 # Minor horizontal principal stress (MPa)
@@ -9,6 +10,7 @@
 0.60
 10.0
 0.2
+0.3
 50.0
 60.0
 30.0

@@ -2,7 +2,7 @@ import sys
 import os.path
 import math
 import numpy as np
-
+import matplotlib.pyplot as plt
 
 def rock_strength_parameter(fric, coh):
     Co = 2*coh*(math.sqrt(fric**2+1)+fric)  # uniaxial compressive strength
@@ -16,27 +16,36 @@ def rock_strength_parameter(fric, coh):
     return Co, T
 
 # calculate principal stress field around wellbore
-def pstress(r, zeta):
+def pstress(radius, r, zeta):
+
+    # r = a/r. r is the radial coordinate system and a is the wellbore radius.
 
     global SHmax, SHmin, Sv, nu, Pm, Po
 
-    theta = 2.*zeta*3.141593/180.
+    eSHmax = SHmax - Po
+    eSHmin = SHmin - Po
+    eSv = Sv - Po
+
+    theta = 2.*math.radians(zeta)
     cos1 = math.cos(theta)
     sin1 = math.sin(theta)
 
-    So = 0.5*(SHmax+SHmin) * (1.+r**2)
-    So = So - 0.5*(SHmax-SHmin)*(1.+3*r**4)*cos1
-    So = So - r**2*(Pm-Po)
+    So = 0.5*(eSHmax+eSHmin) * (1.+radius**2/r**2)
+    So = So - 0.5*(eSHmax-eSHmin)*(1.+3*radius**4/r**4)*cos1
+    So = So - radius**2/r**2*(Pm-Po)
 
-    Sr = 0.5*(SHmax+SHmin)*(1.-r**2)
-    Sr = Sr + 0.5*(SHmax-SHmin)*cos1*(1.-4*r**2+3*r**4)
-    Sr = Sr + r**2*(Pm-Po)
-    Sro = -0.5*(SHmax-SHmin)*sin1*(1.+2*r**2-3*r**4)
-    Sz = Sv - 2*nu*(SHmax-SHmin)*cos1*r**2
+    Sr = 0.5*(eSHmax+eSHmin)*(1.-radius**2/r**2)
+    Sr = Sr + 0.5*(eSHmax-eSHmin)*cos1*(1.-4*radius**2/r**2+3*radius**4/r**4)
+    Sr = Sr + radius**2/r**2*(Pm-Po)
+
+    Sz = eSv - 2*nu*(eSHmax-eSHmin)*cos1*radius**2/r**2
+
+    Tau = -0.5*(eSHmax-eSHmin)*sin1*(1.+2*radius**2/r**2-3*radius**4/r**4)
+
     Sp1 = 0.5*(So+Sr)
-    Sp1 = Sp1 + 0.5*math.sqrt((So-Sr)**2+4*Sro**2)
+    Sp1 = Sp1 + 0.5*math.sqrt((So-Sr)**2+4*Tau**2)
     Sp2 = 0.5*(So+Sr)
-    Sp2 = Sp2 - 0.5*math.sqrt((So-Sr)**2+4*Sro**2)
+    Sp2 = Sp2 - 0.5*math.sqrt((So-Sr)**2+4*Tau**2)
 
     if Sp2 >= Sz: 
         S1 = Sp1
@@ -53,60 +62,58 @@ def pstress(r, zeta):
         S2 = Sp1
         S3 = Sp2
 
-    return S1, S2, S3
+    return [zeta, r, S1, S2, S3]
 
 
-sys.argv
+if __name__ == '__main__': 
 
-if os.path.isfile(sys.argv[1]) == False :
-    print("Input file error.")
-    exit
+    if os.path.isfile(sys.argv[1]) == False :
+        print("Input file error.")
+        exit
 
-f = open(sys.argv[1],"r")
-input = f.readlines()
+    f = open(sys.argv[1],"r")
+    input = f.readlines()
 
-if len(input) != 16:
-    print("Input file format error.")
-    exit
+    if len(input) != 18:
+        print("Input file format error.")
+        exit
 
-fric = float(input[8])
-coh = float(input[9])
-nu = float(input[10])
-Sv = float(input[11])
-SHmax = float(input[12])
-SHmin = float(input[13])
-Po = float(input[14])
-Pm = float(input[15])
+    fric = float(input[9])
+    coh = float(input[10])
+    nu = float(input[11])
+    radius = float(input[12])
+    Sv = float(input[13])
+    SHmax = float(input[14])
+    SHmin = float(input[15])
+    Po = float(input[16])
+    Pm = float(input[17])
 
-drad = 0.01
-const = 3.141593/180.
-radius = 5. #cm
-xl = 7.     #cm
-yl = 7.     #cm
+    plotr = 1.5 # wellbore radius a *
 
-zeta = 90 - np.linspace(0,90,num=91)
-angl = zeta 
+    # calculate stress field
+    azimuths = np.radians(np.linspace(0, 91, 90))
+    zeniths = np.arange(radius*1000, radius*plotr*1000, 1)/1000
+    
+    stress = []
+    for itheta in azimuths:
+        for ir in zeniths:
+            result = pstress(radius, ir, itheta)
+            stress.append(result)
+    
+    fig, ax = plt.subplots()
 
-rad22 = []
-for x in zeta:
-    if x >= 45:
-        tmp = yl/math.sin(x*3.141593/180.)
-    else:
-        tmp = xl/math.cos(x*3.141593/180.)
-    rad22.append(tmp)
+    ptheta = np.array(stress).T[0]
+    pr = np.array(stress).T[1]
+    pS1 = np.array(stress).T[2]
+    
 
-Nrad2 = [(yy/radius - 1.)/drad for yy in rad22]
-Nrad3 = 6./drad
-r = [radius/yy for yy in rad22]
-
-# calculate stress field
-pstress_distr = []
-for ir in r:
-    for izeta in zeta:
-        S1, S2, S3 = pstress(ir,izeta)
-        pstress_distr.append([ir,izeta, S1, S2, S3])
-
-breakpoint()
-# calculate rock stress
-
+    x1 = [pr[i]*math.cos(ptheta[i]) for i in range(0,len(pr))]
+    y1 = [pr[i]*math.sin(ptheta[i]) for i in range(0,len(pr))]
+    
+    cntr = plt.tricontourf(x1, y1, pS1, levels=15, cmap="RdBu_r")
+    plt.colorbar(cntr)
+    
+    plt.gca().set_aspect('equal', adjustable='box')
+    plt.draw()
+    plt.show()
 

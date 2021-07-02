@@ -2,7 +2,8 @@ import sys
 import os.path
 import math
 import numpy as np
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 def rock_strength_parameter(fric, coh):
     Co = 2*coh*(math.sqrt(fric**2+1)+fric)  # uniaxial compressive strength
@@ -91,7 +92,7 @@ if __name__ == '__main__':
     plotr = 1.5 # wellbore radius a *
 
     # calculate stress field
-    azimuths = np.radians(np.linspace(0, 91, 90))
+    azimuths = np.radians(np.linspace(0, 91, 450))
     zeniths = np.arange(radius*1000, radius*plotr*1000, 1)/1000
     
     stress = []
@@ -100,20 +101,55 @@ if __name__ == '__main__':
             result = pstress(radius, ir, itheta)
             stress.append(result)
     
-    fig, ax = plt.subplots()
-
     ptheta = np.array(stress).T[0]
     pr = np.array(stress).T[1]
     pS1 = np.array(stress).T[2]
+    pS2 = np.array(stress).T[3]
+    pS3 = np.array(stress).T[4]
     
-
+    bo_low = int(np.min(pS3))
+    bo_upper = int(np.max(pS1))
+    bo_mid = (bo_low + bo_upper)/2
     x1 = [pr[i]*math.cos(ptheta[i]) for i in range(0,len(pr))]
     y1 = [pr[i]*math.sin(ptheta[i]) for i in range(0,len(pr))]
+
+    fig = make_subplots(rows=3, cols=1)
+
+    fig.append_trace(go.Scatter(x=x1, y=y1, mode='markers',
+        marker=dict(size=1, color=pS1, colorscale=[[0, 'red'], [0.5, 'green'], [1, 'blue']], showscale=True)),
+        row=1, col=1)
+
+    fig.append_trace(go.Scatter(x=x1, y=y1, mode='markers',
+        marker=dict(size=1, color=pS2, colorscale=[[0, "red"], [0.5, "green"], [1, "blue"]], showscale=False)),
+        row=2, col=1)
+
+    fig.append_trace(go.Scatter(x=x1, y=y1, mode='markers',
+        marker=dict(size=1, color=pS3, colorscale=[[0, "red"], [0.5, "green"], [1, "blue"]], showscale=False)),
+        row=3, col=1)
+
+    fig.update_layout(
+    autosize=False,
+    width=600,
+    height=1500,
+    margin=dict(
+        l=50,
+        r=50,
+        b=50,
+        t=50,
+        pad=4
+    ),
+    paper_bgcolor="White",
+)
+
+    fig.show()
+
+    #cntr = plotly.go(plt.pcolormesh([x1, y1], pS1)
+    #cntr = plt.tricontourf(x1, y1, pS1, levels=15, cmap="RdBu_r")
+    #plt.colorbar(cntr)
     
-    cntr = plt.tricontourf(x1, y1, pS1, levels=15, cmap="RdBu_r")
-    plt.colorbar(cntr)
-    
-    plt.gca().set_aspect('equal', adjustable='box')
-    plt.draw()
-    plt.show()
+    #fig, ax = plt.subplots()
+
+    #plt.gca().set_aspect('equal', adjustable='box')
+    #plt.draw()
+    #plt.show()
 

@@ -93,7 +93,7 @@ if __name__ == '__main__':
 
     # calculate stress field
     azimuths = np.radians(np.linspace(0, 91, 450))
-    zeniths = np.arange(radius*1000, radius*plotr*1000, 1)/1000
+    zeniths = np.arange(radius*5000, radius*plotr*5000, 1)/500
     
     stress = []
     for itheta in azimuths:
@@ -113,24 +113,26 @@ if __name__ == '__main__':
     x1 = [pr[i]*math.cos(ptheta[i]) for i in range(0,len(pr))]
     y1 = [pr[i]*math.sin(ptheta[i]) for i in range(0,len(pr))]
 
-    fig = make_subplots(rows=3, cols=1)
+    list = [x for x in zip(x1, y1, pS1, pS2, pS3)]
+
+    fig = make_subplots(rows=1, cols=3)
 
     fig.append_trace(go.Scatter(x=x1, y=y1, mode='markers',
-        marker=dict(size=1, color=pS1, colorscale=[[0, 'red'], [0.5, 'green'], [1, 'blue']], showscale=True)),
+        marker=dict(size=1, color=pS1, showscale=True)),
         row=1, col=1)
 
     fig.append_trace(go.Scatter(x=x1, y=y1, mode='markers',
-        marker=dict(size=1, color=pS2, colorscale=[[0, "red"], [0.5, "green"], [1, "blue"]], showscale=False)),
-        row=2, col=1)
+        marker=dict(size=1, color=pS2, showscale=False)),
+        row=1, col=2)
 
     fig.append_trace(go.Scatter(x=x1, y=y1, mode='markers',
-        marker=dict(size=1, color=pS3, colorscale=[[0, "red"], [0.5, "green"], [1, "blue"]], showscale=False)),
-        row=3, col=1)
+        marker=dict(size=1, color=pS3,  showscale=False)),
+        row=1, col=3)
 
     fig.update_layout(
     autosize=False,
-    width=600,
-    height=1500,
+    width=1600,
+    height=500,
     margin=dict(
         l=50,
         r=50,

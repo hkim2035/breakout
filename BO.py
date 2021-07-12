@@ -112,17 +112,27 @@ if __name__ == '__main__':
     x1 = [pr[i]*math.cos(ptheta[i]) for i in range(0,len(pr))]
     y1 = [pr[i]*math.sin(ptheta[i]) for i in range(0,len(pr))]
 
-<<<<<<< HEAD
     raw = [x for x in zip(x1, y1, pS1, pS2, pS3)]
     raw = pd.DataFrame(raw, columns={"x","y","S1","S2","S3"})
     
-    fig = make_subplots(rows=1, cols=1, shared_yaxes=True, shared_xaxes=True)
+    fig = make_subplots(rows=2, cols=2, shared_yaxes=True, shared_xaxes=True)
 
     fig.append_trace(go.Scatter(x=raw.iloc[:,0], y=raw.iloc[:,1], mode='markers',
         marker=dict(size=1, color=raw.iloc[:,2], colorscale=[[0, 'red'], [0.5, 'green'], [1, 'blue']], showscale=True)),
         row=1, col=1)
 
+    fig.append_trace(go.Scatter(x=raw.iloc[:,0], y=raw.iloc[:,1], mode='markers',
+        marker=dict(size=1, color=raw.iloc[:,3], colorscale=[[0, 'red'], [0.5, 'green'], [1, 'blue']], showscale=True)),
+        row=1, col=2)
     
+    fig.append_trace(go.Scatter(x=raw.iloc[:,0], y=raw.iloc[:,1], mode='markers',
+        marker=dict(size=1, color=raw.iloc[:,4], colorscale=[[0, 'red'], [0.5, 'green'], [1, 'blue']], showscale=True)),
+        row=2, col=1)
+
+    fig.append_trace(go.Scatter(x=raw.iloc[:,0], y=raw.iloc[:,1], mode='markers',
+        marker=dict(size=1, color=raw.iloc[:,4], colorscale=[[0, 'red'], [0.5, 'green'], [1, 'blue']], showscale=True)),
+        row=2, col=2)
+
     Co, q = rock_strength_parameter(fric, coh)
 
     data1 = raw[(Co + q*raw.iloc[:,4]) < raw.iloc[:,2] ]
@@ -139,40 +149,9 @@ if __name__ == '__main__':
         autosize=False,
         #width=600,
         #height=1500,
-        width = 900, 
-        height = 900,
+        width = 1200, 
+        height = 1200,
         paper_bgcolor="White")
-=======
-    list = [x for x in zip(x1, y1, pS1, pS2, pS3)]
-
-    fig = make_subplots(rows=1, cols=3)
-
-    fig.append_trace(go.Scatter(x=x1, y=y1, mode='markers',
-        marker=dict(size=1, color=pS1, showscale=True)),
-        row=1, col=1)
-
-    fig.append_trace(go.Scatter(x=x1, y=y1, mode='markers',
-        marker=dict(size=1, color=pS2, showscale=False)),
-        row=1, col=2)
-
-    fig.append_trace(go.Scatter(x=x1, y=y1, mode='markers',
-        marker=dict(size=1, color=pS3,  showscale=False)),
-        row=1, col=3)
-
-    fig.update_layout(
-    autosize=False,
-    width=1600,
-    height=500,
-    margin=dict(
-        l=50,
-        r=50,
-        b=50,
-        t=50,
-        pad=4
-    ),
-    paper_bgcolor="White",
-)
->>>>>>> 2ad00e96a974db98017dcb66bb7b4e54e3d87491
 
     fig.show()
 

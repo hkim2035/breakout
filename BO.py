@@ -2,6 +2,7 @@ import sys
 import os.path
 import math
 import numpy as np
+import pandas as pd 
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
@@ -14,10 +15,10 @@ def rock_strength_parameter(fric, coh):
     Xk = Co*math.sqrt(3.)/(2.+q)
     T = Co/12.                              # tensile strength
 
-    return Co, T
+    return Co, q
 
 # calculate principal stress field around wellbore
-def pstress(radius, r, zeta):
+def pstress(radius, rr, zeta):
 
     # r = a/r. r is the radial coordinate system and a is the wellbore radius.
 
@@ -31,17 +32,17 @@ def pstress(radius, r, zeta):
     cos1 = math.cos(theta)
     sin1 = math.sin(theta)
 
-    So = 0.5*(eSHmax+eSHmin) * (1.+radius**2/r**2)
-    So = So - 0.5*(eSHmax-eSHmin)*(1.+3*radius**4/r**4)*cos1
-    So = So - radius**2/r**2*(Pm-Po)
+    Sa = 0.5*(eSHmax+eSHmin) * (1. + (radius/rr)**2)
+    Sb = Sa - 0.5*(eSHmax-eSHmin)*(1.+3*(radius/rr)**4)*cos1
+    So = Sb - (radius/rr)**2*(Pm-Po)
 
-    Sr = 0.5*(eSHmax+eSHmin)*(1.-radius**2/r**2)
-    Sr = Sr + 0.5*(eSHmax-eSHmin)*cos1*(1.-4*radius**2/r**2+3*radius**4/r**4)
-    Sr = Sr + radius**2/r**2*(Pm-Po)
+    Sr = 0.5*(eSHmax+eSHmin)*(1.-radius**2/rr**2)
+    Sr = Sr + 0.5*(eSHmax-eSHmin)*cos1*(1.-4*radius**2/rr**2+3*radius**4/rr**4)
+    Sr = Sr + radius**2/rr**2*(Pm-Po)
 
-    Sz = eSv - 2*nu*(eSHmax-eSHmin)*cos1*radius**2/r**2
+    Sz = eSv - 2*nu*(eSHmax-eSHmin)*cos1*radius**2/rr**2
 
-    Tau = -0.5*(eSHmax-eSHmin)*sin1*(1.+2*radius**2/r**2-3*radius**4/r**4)
+    Tau = -0.5*(eSHmax-eSHmin)*sin1*(1.+2*radius**2/rr**2-3*radius**4/rr**4)
 
     Sp1 = 0.5*(So+Sr)
     Sp1 = Sp1 + 0.5*math.sqrt((So-Sr)**2+4*Tau**2)
@@ -63,7 +64,7 @@ def pstress(radius, r, zeta):
         S2 = Sp1
         S3 = Sp2
 
-    return [zeta, r, S1, S2, S3]
+    return [zeta, rr, S1, S2, S3]
 
 
 if __name__ == '__main__': 
@@ -107,39 +108,39 @@ if __name__ == '__main__':
     pS2 = np.array(stress).T[3]
     pS3 = np.array(stress).T[4]
     
-    bo_low = int(np.min(pS3))
-    bo_upper = int(np.max(pS1))
-    bo_mid = (bo_low + bo_upper)/2
+    
     x1 = [pr[i]*math.cos(ptheta[i]) for i in range(0,len(pr))]
     y1 = [pr[i]*math.sin(ptheta[i]) for i in range(0,len(pr))]
 
-    fig = make_subplots(rows=3, cols=1)
+    raw = [x for x in zip(x1, y1, pS1, pS2, pS3)]
+    raw = pd.DataFrame(raw, columns={"x","y","S1","S2","S3"})
+    
+    fig = make_subplots(rows=1, cols=1, shared_yaxes=True, shared_xaxes=True)
 
-    fig.append_trace(go.Scatter(x=x1, y=y1, mode='markers',
-        marker=dict(size=1, color=pS1, colorscale=[[0, 'red'], [0.5, 'green'], [1, 'blue']], showscale=True)),
+    fig.append_trace(go.Scatter(x=raw.iloc[:,0], y=raw.iloc[:,1], mode='markers',
+        marker=dict(size=1, color=raw.iloc[:,2], colorscale=[[0, 'red'], [0.5, 'green'], [1, 'blue']], showscale=True)),
         row=1, col=1)
 
-    fig.append_trace(go.Scatter(x=x1, y=y1, mode='markers',
-        marker=dict(size=1, color=pS2, colorscale=[[0, "red"], [0.5, "green"], [1, "blue"]], showscale=False)),
-        row=2, col=1)
+    
+    Co, q = rock_strength_parameter(fric, coh)
 
-    fig.append_trace(go.Scatter(x=x1, y=y1, mode='markers',
-        marker=dict(size=1, color=pS3, colorscale=[[0, "red"], [0.5, "green"], [1, "blue"]], showscale=False)),
-        row=3, col=1)
+    data1 = raw[(Co + q*raw.iloc[:,4]) < raw.iloc[:,2] ]
+
+    fig.append_trace(go.Scatter(x=data1.iloc[:,0], y=data1.iloc[:,1], mode='markers',
+        marker=dict(size=1, color='black')),
+        row=1, col=1)
+    #
+    #fig.append_trace(go.Scatter(x=x1, y=y1, mode='markers',
+    #    marker=dict(size=1, color=pS3, colorscale=[[0, "red"], [0.5, "green"], [1, "blue"]], showscale=False)),
+    #    row=3, col=1)
 
     fig.update_layout(
-    autosize=False,
-    width=600,
-    height=1500,
-    margin=dict(
-        l=50,
-        r=50,
-        b=50,
-        t=50,
-        pad=4
-    ),
-    paper_bgcolor="White",
-)
+        autosize=False,
+        #width=600,
+        #height=1500,
+        width = 900, 
+        height = 900,
+        paper_bgcolor="White")
 
     fig.show()
 

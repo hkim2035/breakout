@@ -94,7 +94,7 @@ if __name__ == '__main__':
 
     # calculate stress field
     azimuths = np.radians(np.linspace(0, 91, 450))
-    zeniths = np.arange(radius*1000, radius*plotr*1000, 1)/1000
+    zeniths = np.arange(radius*5000, radius*plotr*5000, 1)/500
     
     stress = []
     for itheta in azimuths:
@@ -112,6 +112,7 @@ if __name__ == '__main__':
     x1 = [pr[i]*math.cos(ptheta[i]) for i in range(0,len(pr))]
     y1 = [pr[i]*math.sin(ptheta[i]) for i in range(0,len(pr))]
 
+<<<<<<< HEAD
     raw = [x for x in zip(x1, y1, pS1, pS2, pS3)]
     raw = pd.DataFrame(raw, columns={"x","y","S1","S2","S3"})
     
@@ -141,6 +142,37 @@ if __name__ == '__main__':
         width = 900, 
         height = 900,
         paper_bgcolor="White")
+=======
+    list = [x for x in zip(x1, y1, pS1, pS2, pS3)]
+
+    fig = make_subplots(rows=1, cols=3)
+
+    fig.append_trace(go.Scatter(x=x1, y=y1, mode='markers',
+        marker=dict(size=1, color=pS1, showscale=True)),
+        row=1, col=1)
+
+    fig.append_trace(go.Scatter(x=x1, y=y1, mode='markers',
+        marker=dict(size=1, color=pS2, showscale=False)),
+        row=1, col=2)
+
+    fig.append_trace(go.Scatter(x=x1, y=y1, mode='markers',
+        marker=dict(size=1, color=pS3,  showscale=False)),
+        row=1, col=3)
+
+    fig.update_layout(
+    autosize=False,
+    width=1600,
+    height=500,
+    margin=dict(
+        l=50,
+        r=50,
+        b=50,
+        t=50,
+        pad=4
+    ),
+    paper_bgcolor="White",
+)
+>>>>>>> 2ad00e96a974db98017dcb66bb7b4e54e3d87491
 
     fig.show()
 
